@@ -3,12 +3,7 @@ package eu.righettod.poccsrf.filter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.servlet.Filter;
-import javax.servlet.FilterChain;
-import javax.servlet.FilterConfig;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
+import javax.servlet.*;
 import javax.servlet.annotation.WebFilter;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
@@ -107,7 +102,9 @@ public class CSRFValidationFilter implements Filter {
         Cookie tokenCookie = null;
         if (httpReq.getCookies() != null) {
             String csrfCookieExpectedName = this.determineCookieName(httpReq);
+            LOG.info("csrfCookieExpectedName : {}", csrfCookieExpectedName);
             tokenCookie = Arrays.stream(httpReq.getCookies()).filter(c -> c.getName().equals(csrfCookieExpectedName)).findFirst().orElse(null);
+            LOG.info("tokenCookie : {}", tokenCookie.getValue());
         }
         if (tokenCookie == null || this.isBlank(tokenCookie.getValue())) {
             LOG.info("CSRFValidationFilter: CSRF cookie absent or value is null/empty so we provide one and return an HTTP NO_CONTENT response !");
@@ -210,6 +207,7 @@ public class CSRFValidationFilter implements Filter {
         //We let the adding of the "Secure" cookie attribute to the reverse proxy rewriting...
         //Here we lock the cookie from JS access and we use the SameSite new attribute protection
         String cookieSpec = String.format("%s=%s; Path=%s; HttpOnly; SameSite=Strict", this.determineCookieName(httpRequest), token, httpRequest.getRequestURI());
+        LOG.info("cookieSpec : {}", cookieSpec);
         httpResponse.addHeader("Set-Cookie", cookieSpec);
         //Add cookie header to give access to the token to the JS code
         httpResponse.setHeader(CSRF_TOKEN_NAME, token);

@@ -4,7 +4,8 @@ var CSRF_TOKENS = {};
 
 //Panel of possible HTTP request type and backend services (used for the demo)
 var METHODS_SET = ["GET", "POST", "DELETE", "PUT"];
-var BACKEND_SERVICES_SET = ["setUser", "setProfile", "updateAccount", "lockAccount", "initBalance", "resetPassword"];
+//var BACKEND_SERVICES_SET = ["setUser", "setProfile", "updateAccount", "lockAccount", "initBalance", "resetPassword"];
+var BACKEND_SERVICES_SET = ["setUser", "resetPassword"];
 
 //Send a random request to a backend service for which a CSRF token is mandatory
 function sendRequest(){
@@ -17,18 +18,24 @@ function sendRequest(){
     //Prepare asynchronous Ajax request
     var req = new XMLHttpRequest();
     req.open(method, "/backend/" + backendService + "?param=" + new Date().getTime(), true);
+    console.log("method", method);
+    console.log("backendService", backendService);
+    console.log("CSRF_TOKENS[backendService]", CSRF_TOKENS[backendService]);
     if(CSRF_TOKENS[backendService] != null){
         req.setRequestHeader("X-TOKEN", CSRF_TOKENS[backendService]);
+        console.log("X-TOKEN", CSRF_TOKENS[backendService]);
     }
     req.addEventListener("error", function(evt){ console.error("Request meet an error: " + req.statusText) });
     req.addEventListener("abort", function(evt){ console.error("Request aborted: " + req.statusText) });
     req.addEventListener("load", function(evt){
-        if (req.readyState === 4 && req.status === 204) {
+        if (req.readyState === XMLHttpRequest.DONE && req.status === 204) {
+            console.log("readyState for status 204", req.readyState);
             CSRF_TOKENS[backendService] = req.getResponseHeader("X-TOKEN");
             var content = document.getElementById("renderingZone").innerHTML;
             content += "<b>CSRF token initialized for the backend service '" + backendService + "'</b><br>";
             document.getElementById("renderingZone").innerHTML = content;
-        }else if (req.readyState === 4 && req.status === 200) {
+        }else if (req.readyState === XMLHttpRequest.DONE && req.status === 200) {
+            console.log("readyState fir status 200", req.readyState);
             CSRF_TOKENS[backendService] = req.getResponseHeader("X-TOKEN");
             var data = JSON.parse(req.responseText);
             var item = "<code>Method: " + data.Method +  " - RequestURI: " + data.RequestURI + " - QueryString: " + data.QueryString + "</code><br>";
@@ -43,7 +50,7 @@ function sendRequest(){
 
 //Send a request every 1 sec from 4 scheduler
 document.getElementById("requestAction").onclick = sendRequest;
-setInterval(sendRequest, 1285);
+/*setInterval(sendRequest, 1285);
 setInterval(sendRequest, 1456);
 setInterval(sendRequest, 1148);
-setInterval(sendRequest, 1085);
+setInterval(sendRequest, 1085);*/
